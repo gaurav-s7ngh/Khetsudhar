@@ -157,7 +157,6 @@ export default function AppLayout() {
           }}
         />
 
-        {/* DAY 1: VISIBLE ROUTES */}
         <Stack.Screen
           name="lessons"
           options={{
@@ -183,9 +182,23 @@ export default function AppLayout() {
           }}
         />
 
-        {/* DAY 1: HIDDEN ROUTES (Commented Out) */}
-        {/* <Stack.Screen name="leaderboard" options={{ headerShown: true, headerTitle: t('leaderboard'), headerRight: () => <AppHeaderRight /> }} /> */}
-        {/* <Stack.Screen name="quests" options={{ headerShown: true, headerTitle: t('monthly_quests'), headerRight: () => <AppHeaderRight /> }} /> */}
+        {/* RESTORED: Routes for Day 2 Placeholders */}
+        <Stack.Screen
+          name="leaderboard"
+          options={{
+            headerShown: true,
+            headerTitle: t("leaderboard"),
+            headerRight: () => <AppHeaderRight />,
+          }}
+        />
+        <Stack.Screen
+          name="quests"
+          options={{
+            headerShown: true,
+            headerTitle: t("monthly_quests"),
+            headerRight: () => <AppHeaderRight />,
+          }}
+        />
 
         {/* Lesson Flow */}
         <Stack.Screen

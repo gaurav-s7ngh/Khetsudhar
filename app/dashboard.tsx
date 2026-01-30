@@ -18,11 +18,12 @@ import { supabase } from "@/utils/supabase";
 
 // Assets
 import Coin from "../assets/images/coin.svg";
+import LeaderBoard from "../assets/images/LeaderBoard.svg";
 import Lessons from "../assets/images/Lessons.svg";
 import MarketPrice from "../assets/images/market-price.svg";
 import MascotFarmer from "../assets/images/MascotFarmer.svg";
+import Quest from "../assets/images/Quest.svg";
 import Reward from "../assets/images/Reward.svg";
-// REMOVED: LeaderBoard, Quest Imports
 
 const PIXEL_FONT = "monospace";
 
@@ -255,8 +256,27 @@ export default function DashboardScreen() {
           </Text>
         </View>
 
-        {/* DAY 1 GRID: REWARDS, LESSONS, MARKET */}
+        {/* GRID: RESTORED FOR VISIBILITY */}
         <View style={styles.gridContainer}>
+          <View style={styles.gridRow}>
+            {/* QUESTS - VISIBLE BUT LEADS TO PLACEHOLDER */}
+            <HubButton
+              label={t("monthly_quests")}
+              icon={<Quest width={60} height={60} />}
+              onPress={() => router.push("/quests")}
+              style={[styles.buttonSquare, styles.questsButton]}
+              textStyle={styles.squareButtonText}
+            />
+            {/* LEADERBOARD - VISIBLE BUT LEADS TO PLACEHOLDER */}
+            <HubButton
+              label={t("leaderboard")}
+              icon={<LeaderBoard width={60} height={60} />}
+              onPress={() => router.push("/leaderboard")}
+              style={[styles.buttonSquare, styles.leaderboardButton]}
+              textStyle={styles.squareButtonText}
+            />
+          </View>
+
           <View style={styles.gridRow}>
             <HubButton
               label={t("rewards")}
@@ -424,6 +444,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 10,
   },
+  buttonSquare: { flex: 1, aspectRatio: 1, marginHorizontal: 5 },
   buttonRect: {
     flex: 1,
     height: 100,
@@ -434,8 +455,17 @@ const styles = StyleSheet.create({
 
   iconContainer: { marginBottom: 10 },
   buttonText: { color: "white", fontWeight: "bold", fontFamily: PIXEL_FONT },
+  squareButtonText: { fontSize: 14, textAlign: "center", marginTop: 5 },
   rectButtonText: { fontSize: 18, marginLeft: 20 },
 
+  questsButton: {
+    backgroundColor: "rgba(74, 20, 140, 0.4)",
+    borderColor: "#7B1FA2",
+  },
+  leaderboardButton: {
+    backgroundColor: "rgba(255, 143, 0, 0.25)",
+    borderColor: "#FF8F00",
+  },
   rewardsButton: {
     backgroundColor: "rgba(194, 24, 91, 0.4)",
     borderColor: "#E91E63",

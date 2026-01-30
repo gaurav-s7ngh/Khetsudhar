@@ -50,7 +50,7 @@ const fetchLessonsAndProgress = async (lang: string) => {
     .from("lessons")
     .select("*")
     .order("sequence", { ascending: true })
-    .limit(DAY_1_LESSON_LIMIT); // Strict backend limit for Day 1
+    .limit(DAY_1_LESSON_LIMIT);
 
   if (lessonsError) throw lessonsError;
 
@@ -128,40 +128,47 @@ export default function LessonsScreen() {
       };
     }, [lessons]);
 
-  const renderLessonCard = (lesson: Lesson, isCurrent = false) => (
-    <TouchableOpacity
-      key={lesson.id}
-      style={[
-        styles.lessonCard,
-        isCurrent && styles.currentLessonCard,
-        lesson.status === "completed" && styles.completedLessonCard,
-        lesson.status === "locked" && styles.lockedLessonCard,
-      ]}
-      disabled={lesson.status === "locked"}
-      onPress={() =>
-        router.push({
-          pathname: "/lesson/[id]",
-          params: { id: lesson.id.toString() },
-        })
-      }
-    >
-      <Text
-        style={[styles.lessonNumber, isCurrent && styles.currentLessonNumber]}
+  const renderLessonCard = (lesson: Lesson, isCurrent = false) => {
+    // SPECIAL STYLING: 3rd Lesson is Women Centric -> PINK
+    const isWomenCentric = lesson.sequence === 3;
+
+    return (
+      <TouchableOpacity
+        key={lesson.id}
+        style={[
+          styles.lessonCard,
+          isCurrent && styles.currentLessonCard,
+          lesson.status === "completed" && styles.completedLessonCard,
+          lesson.status === "locked" && styles.lockedLessonCard,
+          // Apply Pink Style if it's Lesson 3
+          isWomenCentric && styles.pinkLessonCard,
+        ]}
+        disabled={lesson.status === "locked"}
+        onPress={() =>
+          router.push({
+            pathname: "/lesson/[id]",
+            params: { id: lesson.id.toString() },
+          })
+        }
       >
-        {lesson.sequence}
-      </Text>
-      <View style={styles.lessonContent}>
-        <Text style={styles.lessonTitle}>{lesson.title}</Text>
-        <Text style={styles.lessonDescription} numberOfLines={2}>
-          {lesson.description}
+        <Text
+          style={[styles.lessonNumber, isCurrent && styles.currentLessonNumber]}
+        >
+          {lesson.sequence}
         </Text>
-        <View style={styles.pointsContainer}>
-          <Coin width={24} height={24} style={styles.coinIcon} />
-          <Text style={styles.pointsText}>{lesson.points}</Text>
+        <View style={styles.lessonContent}>
+          <Text style={styles.lessonTitle}>{lesson.title}</Text>
+          <Text style={styles.lessonDescription} numberOfLines={2}>
+            {lesson.description}
+          </Text>
+          <View style={styles.pointsContainer}>
+            <Coin width={24} height={24} style={styles.coinIcon} />
+            <Text style={styles.pointsText}>{lesson.points}</Text>
+          </View>
         </View>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   if ((loading || isTransLoading) && !lessons) {
     return (
@@ -295,6 +302,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#222",
     borderColor: "#388e3c",
   },
+  pinkLessonCard: { backgroundColor: "#880E4F", borderColor: "#E91E63" }, // PINK STYLE
   lockedLessonCard: { opacity: 0.6 },
   completedLessonCard: { backgroundColor: "#2E7D32", borderColor: "#388E3C" },
   lessonNumber: {

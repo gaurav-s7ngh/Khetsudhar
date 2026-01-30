@@ -1,191 +1,56 @@
-import { useFocusEffect } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import React, { useCallback, useState } from 'react';
-import {
-  ActivityIndicator,
-  SafeAreaView,
-  ScrollView,
-  StyleProp,
-  StyleSheet,
-  Text,
-  View,
-  ViewStyle
-} from 'react-native';
+import { FontAwesome5 } from "@expo/vector-icons";
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import React from "react";
+import { SafeAreaView, StyleSheet, Text, View } from "react-native";
 
-import { useTranslation } from '@/hooks/useTranslation';
-import { supabase } from '@/utils/supabase';
-import Qcoin from '../assets/images/Qcoin.svg';
-import Coin from '../assets/images/coin.svg';
-import WinMascot from '../assets/images/winMascot.svg';
-
-import { Platform } from 'react-native';
-// Uses San Francisco on iOS and Roboto on Android
-const PIXEL_FONT = Platform.OS === 'ios' ? 'System' : 'Roboto';
-
-// Helper to calculate score with multiplier
-const calculateScore = (coins: number, questCoins: number) => {
-  // Example: 1 Quest Coin adds 20% boost (1.2x)
-  const multiplier = 1 + (questCoins * 0.2); 
-  return Math.floor(coins * multiplier);
-};
-
-const RankRow = ({ rank, name, score, coins, isUser = false, multiplier }: any) => {
-  let cardStyle: StyleProp<ViewStyle> = styles.defaultCard;
-  let numberStyle: StyleProp<ViewStyle> = styles.rankNumberContainer;
-
-  if (isUser) {
-    cardStyle = styles.userCard;
-    numberStyle = [styles.rankNumberContainer, styles.userRankNumber];
-  } else if (rank === 1) {
-    cardStyle = styles.goldCard;
-    numberStyle = [styles.rankNumberContainer, styles.goldRankNumber];
-  } else if (rank === 2) {
-    cardStyle = styles.silverCard;
-    numberStyle = [styles.rankNumberContainer, styles.silverRankNumber];
-  } else if (rank === 3) {
-    cardStyle = styles.bronzeCard;
-    numberStyle = [styles.rankNumberContainer, styles.bronzeRankNumber];
-  }
-
-  return (
-    <View style={[styles.rankCardBase, cardStyle]}>
-      <View style={numberStyle}>
-        <Text style={styles.rankNumber}>{rank}</Text>
-      </View>
-      <View style={{flex: 1}}>
-        <Text style={styles.rankName}>{name || 'Anonymous'}</Text>
-        <Text style={styles.rankCoins}>{coins} Coins</Text>
-        {multiplier > 1 && (
-          <Text style={styles.rankMultiplier}>x{multiplier.toFixed(1)} Boost Active</Text>
-        )}
-      </View>
-      <View style={styles.scoreContainer}>
-        <Coin width={20} height={20} />
-        <Text style={styles.rankScore}>{score}</Text>
-      </View>
-    </View>
-  );
-};
+const PIXEL_FONT = "monospace";
 
 export default function LeaderboardScreen() {
-  const { t, isLoading: isTransLoading } = useTranslation();
-  const [leaders, setLeaders] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [currentUserData, setCurrentUserData] = useState<any>(null);
-
-  useFocusEffect(
-    useCallback(() => {
-      const fetchLeaderboard = async () => {
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          const currentId = session?.user?.id;
-
-          // FEAT: Fetch only the top 50 pre-calculated rows from the Database View
-          const { data, error } = await supabase
-            .from('leaderboard_view')
-            .select('*')
-            .limit(50);
-
-          if (error) throw error;
-
-          setLeaders(data || []);
-          
-          // Find current user's rank efficiently
-          if (currentId) {
-            // If user is in top 50, find them there
-            let userEntry = data?.find(u => u.id === currentId);
-            
-            // If user is NOT in top 50, fetch just their specific row
-            if (!userEntry) {
-              const { data: userData } = await supabase
-                .from('leaderboard_view')
-                .select('*')
-                .eq('id', currentId)
-                .single();
-              userEntry = userData;
-            }
-            setCurrentUserData(userEntry);
-          }
-
-        } catch (err) {
-          console.error('Leaderboard error:', err);
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchLeaderboard();
-    }, [])
-  );
-
-  if (loading || isTransLoading) return <SafeAreaView style={styles.container}><View style={styles.loadingContainer}><ActivityIndicator size="large" color="#388e3c" /></View></SafeAreaView>;
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        
-        {/* --- Header --- */}
-        <View style={styles.headerContainer}>
-          <WinMascot width={100} height={100} style={styles.mascot} />
-          <View style={styles.headerText}>
-            {/* --- USE TRANSLATION HERE --- */}
-            <Text style={styles.headerTitle}>{t('leaderboard')}</Text>
-            {/* ---------------------------- */}
-            <View style={styles.multiplierContainer}>
-              <Qcoin width={20} height={20} style={styles.coinIcon} />
-              <Text style={styles.multiplierText}>
-                YOUR BOOST: x{currentUserData ? currentUserData.multiplier.toFixed(1) : '1.0'}
-              </Text>
-            </View>
-          </View>
-        </View>
+      <Stack.Screen options={{ title: "LEADERBOARD" }} />
 
-        {/* --- List --- */}
-        <View style={styles.listContainer}>
-          {leaders.map((user, index) => (
-            <RankRow
-              key={user.id}
-              rank={index + 1}
-              name={user.full_name}
-              score={user.finalScore}
-              coins={user.coins}
-              multiplier={user.multiplier}
-              isUser={user.id === currentUserData?.id}
-            />
-          ))}
-        </View>
-      </ScrollView>
+      <View style={styles.content}>
+        <FontAwesome5
+          name="trophy"
+          size={80}
+          color="#555"
+          style={styles.icon}
+        />
+        <Text style={styles.title}>COMING DAY 2</Text>
+        <Text style={styles.subtitle}>
+          Compete with other farmers globally.
+        </Text>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#1C1C1E' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scrollContainer: { padding: 16, paddingBottom: 40 },
-  headerContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 20, paddingHorizontal: 10 },
-  mascot: { marginRight: 10 },
-  headerText: { flex: 1 },
-  headerTitle: { color: 'white', fontSize: 22, fontWeight: 'bold', fontFamily: PIXEL_FONT, letterSpacing: 1 },
-  multiplierContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(74, 20, 140, 0.4)', borderColor: '#8E24AA', borderWidth: 1, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4, marginTop: 8, alignSelf: 'flex-start' },
-  coinIcon: { marginRight: 6 },
-  multiplierText: { color: '#E1BEE7', fontSize: 14, fontWeight: 'bold', fontFamily: PIXEL_FONT },
-  listContainer: { gap: 12 },
-  rankCardBase: { flexDirection: 'row', alignItems: 'center', borderRadius: 30, paddingVertical: 10, paddingHorizontal: 12, borderWidth: 2, elevation: 10 },
-  goldCard: { backgroundColor: '#544607', borderColor: '#FDD835' },
-  silverCard: { backgroundColor: '#4E5357', borderColor: '#C0C0C0' },
-  bronzeCard: { backgroundColor: '#5C3A21', borderColor: '#CD7F32' },
-  userCard: { backgroundColor: '#1E3A5F', borderColor: '#0277BD' },
-  defaultCard: { backgroundColor: '#333333', borderColor: '#424242' },
-  rankNumberContainer: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.2)', justifyContent: 'center', alignItems: 'center', marginRight: 12, borderWidth: 2, borderColor: 'transparent' },
-  goldRankNumber: { backgroundColor: 'rgba(253, 216, 53, 0.2)', borderColor: 'rgba(253, 216, 53, 0.5)' },
-  silverRankNumber: { backgroundColor: 'rgba(192, 192, 192, 0.2)', borderColor: 'rgba(192, 192, 192, 0.5)' },
-  bronzeRankNumber: { backgroundColor: 'rgba(205, 127, 50, 0.2)', borderColor: 'rgba(205, 127, 50, 0.5)' },
-  userRankNumber: { backgroundColor: 'rgba(2, 119, 189, 0.2)', borderColor: 'rgba(2, 119, 189, 0.5)' },
-  rankNumber: { color: 'white', fontSize: 20, fontWeight: 'bold', fontFamily: PIXEL_FONT },
-  rankName: { color: 'white', fontSize: 18, fontWeight: '500' },
-  rankMultiplier: { color: '#B0B0B0', fontSize: 10, fontFamily: PIXEL_FONT, marginTop: 2 },
-  rankCoins: { color: '#FFD700', fontSize: 12, fontFamily: PIXEL_FONT, marginTop: 2 },
-  scoreContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 12 },
-  rankScore: { color: 'white', fontSize: 16, fontWeight: 'bold', fontFamily: PIXEL_FONT, marginLeft: 6 },
+  container: {
+    flex: 1,
+    backgroundColor: "#121212",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  content: { alignItems: "center", padding: 30 },
+  icon: { marginBottom: 30, opacity: 0.8 },
+  title: {
+    color: "white",
+    fontSize: 28,
+    fontFamily: PIXEL_FONT,
+    fontWeight: "bold",
+    marginBottom: 15,
+    letterSpacing: 2,
+  },
+  subtitle: {
+    color: "#888",
+    fontSize: 14,
+    textAlign: "center",
+    maxWidth: 250,
+    lineHeight: 22,
+    fontFamily: PIXEL_FONT,
+  },
 });
