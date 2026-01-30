@@ -21,6 +21,32 @@ import Coin from "../assets/images/coin.svg";
 import Mascot from "../assets/images/Mascot.svg";
 import MascotFarmer from "../assets/images/MascotFarmer.svg";
 
+// --- DAY 1 HARDCODED CONTENT ---
+// We hardcode this to prevent Supabase from returning Lesson 4, 5, etc.
+const STATIC_LESSONS = [
+  {
+    id: 1,
+    sequence: 1,
+    title_en: "Soil Health Basics",
+    description_en: "Understanding your land's foundation.",
+    points: 100,
+  },
+  {
+    id: 2,
+    sequence: 2,
+    title_en: "Organic Fertilizers",
+    description_en: "Boost crops naturally and safely.",
+    points: 150,
+  },
+  {
+    id: 3,
+    sequence: 3,
+    title_en: "Women in Farming",
+    description_en: "Empowering communities together.",
+    points: 200,
+  },
+];
+
 interface LessonData {
   id: number;
   title: string;
@@ -33,38 +59,26 @@ interface Lesson extends LessonData {
   status: "current" | "completed" | "locked";
 }
 
-// DAY 1 CONFIG: Show exactly 3 lessons
-const DAY_1_LESSON_LIMIT = 3;
-
 const fetchLessonsAndProgress = async (lang: string) => {
   const { data: sessionData } = await supabase.auth.getSession();
   const userId = sessionData.session?.user.id;
 
-  const titleCol = `title_${lang}`;
-  const descCol = `description_${lang}`;
-  const fallbackTitle = `title_${DEFAULT_LANGUAGE}`;
-  const fallbackDesc = `description_${DEFAULT_LANGUAGE}`;
+  // HARDCODED: Use static array instead of DB fetch for content
+  const allLessonsRaw = STATIC_LESSONS;
 
-  // Fetch actual data but limit to 3 for Day 1
-  const { data: allLessonsRaw, error: lessonsError } = await supabase
-    .from("lessons")
-    .select("*")
-    .order("sequence", { ascending: true })
-    .limit(DAY_1_LESSON_LIMIT);
-
-  if (lessonsError) throw lessonsError;
-
-  const allLessons: LessonData[] = (allLessonsRaw || []).map((l: any) => ({
+  // Map static data to current language (mocking translation for Day 1)
+  const allLessons: LessonData[] = allLessonsRaw.map((l: any) => ({
     id: l.id,
     sequence: l.sequence,
     points: l.points,
-    title: l[titleCol] || l[fallbackTitle] || "Lesson",
-    description: l[descCol] || l[fallbackDesc] || "",
+    title: l.title_en, // Force EN for demo consistency
+    description: l.description_en,
   }));
 
   let completedIds = new Set<number>();
   let lastCompletedSeq = 0;
 
+  // REAL FETCH: Only check progress from DB
   if (userId) {
     const { data: completedLessons } = await supabase
       .from("user_lessons")
@@ -111,7 +125,7 @@ export default function LessonsScreen() {
     isOffline,
     refresh,
     refreshing,
-  } = useCachedQuery(`lessons_list_day1_${language || DEFAULT_LANGUAGE}`, () =>
+  } = useCachedQuery(`lessons_list_static_day1`, () =>
     fetchLessonsAndProgress(language || DEFAULT_LANGUAGE),
   );
 

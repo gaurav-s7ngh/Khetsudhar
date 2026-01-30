@@ -27,6 +27,28 @@ import Reward from "../assets/images/Reward.svg";
 
 const PIXEL_FONT = "monospace";
 
+// --- DAY 1 HARDCODED CONTENT ---
+const DEMO_LESSONS = [
+  {
+    id: 1,
+    sequence: 1,
+    title: "Soil Health Basics",
+    description: "Understanding your land's foundation.",
+  },
+  {
+    id: 2,
+    sequence: 2,
+    title: "Organic Fertilizers",
+    description: "Boost crops naturally and safely.",
+  },
+  {
+    id: 3,
+    sequence: 3,
+    title: "Women in Farming",
+    description: "Empowering communities together.",
+  },
+];
+
 interface LessonDetail {
   id: number;
   title: string;
@@ -42,21 +64,21 @@ type UserProgress = {
   next_lesson: LessonDetail | null;
 };
 
-// --- DATA FETCHERS (DAY 1 SIMPLIFIED) ---
+// --- DATA FETCHERS ---
 const fetchUserProgress = async (): Promise<UserProgress> => {
   const { data: sessionData } = await supabase.auth.getSession();
   const userId = sessionData.session?.user.id;
 
   if (!userId)
     return {
-      total_lessons: 0,
+      total_lessons: 3,
       completed_lessons: 0,
       user_coins: 0,
       user_name: "FARMER",
-      next_lesson: null,
+      next_lesson: DEMO_LESSONS[0],
     };
 
-  // 1. Profile
+  // 1. Profile (Keep fetching coins/name so it feels personalized)
   const { data: profileData } = await supabase
     .from("profiles")
     .select("coins, full_name")
@@ -66,10 +88,10 @@ const fetchUserProgress = async (): Promise<UserProgress> => {
   const user_coins = profileData?.coins || 0;
   const user_name = profileData?.full_name || "FARMER";
 
-  // 2. Lessons Counts & Next Lesson Logic
-  // Day 1: We mock total lessons to 3 to match the simplified flow
-  const total_lessons = 3;
+  // 2. Calculate Progress LOCALLY using hardcoded total
+  const total_lessons = DEMO_LESSONS.length; // Hardcoded to 3
 
+  // Only fetch COMPLETED status from DB
   const { data: userLessons } = await supabase
     .from("user_lessons")
     .select("lesson_id")
@@ -78,53 +100,16 @@ const fetchUserProgress = async (): Promise<UserProgress> => {
   const completedIds = userLessons?.map((ul) => ul.lesson_id) || [];
   const completed_lessons = completedIds.length;
 
+  // 3. Determine Next Lesson from HARDCODED list
+  // If you have done 0, next is index 0. If done 1, next is index 1.
+  // If completed >= 3, next is null.
   let nextLessonData: LessonDetail | null = null;
-  let maxSeq = 0;
 
-  if (completedIds.length > 0) {
-    const { data: completedSeqsData } = await supabase
-      .from("lessons")
-      .select("sequence")
-      .in("id", completedIds);
-
-    if (completedSeqsData) {
-      maxSeq = completedSeqsData.reduce(
-        (max, current) => Math.max(max, current.sequence),
-        0,
-      );
-    }
-  }
-
-  const { data: next } = await supabase
-    .from("lessons")
-    .select("id, title_en, description_en, sequence")
-    .gt("sequence", maxSeq)
-    .order("sequence", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-
-  if (next) {
-    nextLessonData = {
-      id: next.id,
-      title: next.title_en || "Next Lesson",
-      description: next.description_en || "Continue your journey.",
-      sequence: next.sequence,
-    };
-  } else if (completed_lessons === 0) {
-    const { data: first } = await supabase
-      .from("lessons")
-      .select("id, title_en, description_en, sequence")
-      .eq("sequence", 1)
-      .maybeSingle();
-
-    if (first) {
-      nextLessonData = {
-        id: first.id,
-        title: first.title_en,
-        description: first.description_en,
-        sequence: first.sequence,
-      };
-    }
+  if (completed_lessons < total_lessons) {
+    // We assume linear progression 1 -> 2 -> 3 for Day 1
+    // (If user did lesson 1 and 3, completed is 2, so we show index 2 (Lesson 3).
+    //  It's a simple approximation for the prototype.)
+    nextLessonData = DEMO_LESSONS[completed_lessons];
   }
 
   return {
@@ -167,7 +152,7 @@ export default function DashboardScreen() {
     loading: progressLoading,
     refresh: refreshProgress,
     refreshing,
-  } = useCachedQuery(`dashboard_progress_day1`, fetchUserProgress);
+  } = useCachedQuery(`dashboard_progress_static_day1`, fetchUserProgress);
 
   const handleRefresh = async () => {
     await refreshProgress();
@@ -205,7 +190,7 @@ export default function DashboardScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* HERO CARD: NEXT LESSON ONLY */}
+        {/* HERO CARD */}
         <View style={styles.heroContainer}>
           <MascotFarmer width={110} height={110} style={styles.mascot} />
 
@@ -256,10 +241,9 @@ export default function DashboardScreen() {
           </Text>
         </View>
 
-        {/* GRID: RESTORED FOR VISIBILITY */}
+        {/* HUB GRID */}
         <View style={styles.gridContainer}>
           <View style={styles.gridRow}>
-            {/* QUESTS - VISIBLE BUT LEADS TO PLACEHOLDER */}
             <HubButton
               label={t("monthly_quests")}
               icon={<Quest width={60} height={60} />}
@@ -267,7 +251,6 @@ export default function DashboardScreen() {
               style={[styles.buttonSquare, styles.questsButton]}
               textStyle={styles.squareButtonText}
             />
-            {/* LEADERBOARD - VISIBLE BUT LEADS TO PLACEHOLDER */}
             <HubButton
               label={t("leaderboard")}
               icon={<LeaderBoard width={60} height={60} />}
