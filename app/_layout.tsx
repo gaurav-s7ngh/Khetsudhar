@@ -182,7 +182,25 @@ export default function AppLayout() {
           }}
         />
 
-        {/* RESTORED: Routes for Day 2 Placeholders */}
+        {/* Govt Schemes Routes */}
+        <Stack.Screen
+          name="schemes/index"
+          options={{
+            headerShown: true,
+            headerTitle: t("schemes_title"),
+            headerRight: () => <AppHeaderRight />,
+          }}
+        />
+        <Stack.Screen
+          name="schemes/[id]"
+          options={{
+            headerShown: true,
+            headerTitle: t("schemes_title"),
+            headerRight: () => <AppHeaderRight />,
+          }}
+        />
+
+        {/* Day 2 Placeholders */}
         <Stack.Screen
           name="leaderboard"
           options={{

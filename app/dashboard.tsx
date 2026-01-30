@@ -1,3 +1,4 @@
+import { FontAwesome5 } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
@@ -27,7 +28,6 @@ import Reward from "../assets/images/Reward.svg";
 
 const PIXEL_FONT = "monospace";
 
-// --- DAY 1 HARDCODED CONTENT ---
 const DEMO_LESSONS = [
   {
     id: 1,
@@ -78,7 +78,6 @@ const fetchUserProgress = async (): Promise<UserProgress> => {
       next_lesson: DEMO_LESSONS[0],
     };
 
-  // 1. Profile (Keep fetching coins/name so it feels personalized)
   const { data: profileData } = await supabase
     .from("profiles")
     .select("coins, full_name")
@@ -88,10 +87,8 @@ const fetchUserProgress = async (): Promise<UserProgress> => {
   const user_coins = profileData?.coins || 0;
   const user_name = profileData?.full_name || "FARMER";
 
-  // 2. Calculate Progress LOCALLY using hardcoded total
-  const total_lessons = DEMO_LESSONS.length; // Hardcoded to 3
+  const total_lessons = DEMO_LESSONS.length;
 
-  // Only fetch COMPLETED status from DB
   const { data: userLessons } = await supabase
     .from("user_lessons")
     .select("lesson_id")
@@ -100,15 +97,9 @@ const fetchUserProgress = async (): Promise<UserProgress> => {
   const completedIds = userLessons?.map((ul) => ul.lesson_id) || [];
   const completed_lessons = completedIds.length;
 
-  // 3. Determine Next Lesson from HARDCODED list
-  // If you have done 0, next is index 0. If done 1, next is index 1.
-  // If completed >= 3, next is null.
   let nextLessonData: LessonDetail | null = null;
 
   if (completed_lessons < total_lessons) {
-    // We assume linear progression 1 -> 2 -> 3 for Day 1
-    // (If user did lesson 1 and 3, completed is 2, so we show index 2 (Lesson 3).
-    //  It's a simple approximation for the prototype.)
     nextLessonData = DEMO_LESSONS[completed_lessons];
   }
 
@@ -257,6 +248,23 @@ export default function DashboardScreen() {
               onPress={() => router.push("/leaderboard")}
               style={[styles.buttonSquare, styles.leaderboardButton]}
               textStyle={styles.squareButtonText}
+            />
+          </View>
+
+          {/* SCHEMES BUTTON - Fixed Error with 'as any' */}
+          <View style={styles.gridRow}>
+            <HubButton
+              label={t("schemes_title")}
+              icon={<FontAwesome5 name="university" size={40} color="white" />}
+              onPress={() => router.push("/schemes" as any)}
+              style={[
+                styles.buttonRect,
+                {
+                  backgroundColor: "rgba(33, 150, 243, 0.3)",
+                  borderColor: "#2196F3",
+                },
+              ]}
+              textStyle={styles.rectButtonText}
             />
           </View>
 
