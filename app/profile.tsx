@@ -1,4 +1,5 @@
 import { FontAwesome5 } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // Needed for language persistence
 import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -49,7 +50,7 @@ const decode = (base64: string) => {
   return bytes.buffer;
 };
 
-// --- CUSTOM ANIMATED GAUGE (Kept for Day 1 as "Core Simulation Feature") ---
+// --- CUSTOM ANIMATED GAUGE ---
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
 const SustainabilityGauge = ({
@@ -160,7 +161,12 @@ const StatCard = ({
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { t, isLoading: isTransLoading } = useTranslation();
+  const {
+    t,
+    language,
+    setLanguage,
+    isLoading: isTransLoading,
+  } = useTranslation(); // Added setLanguage
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [profile, setProfile] = useState<any>(null);
@@ -193,6 +199,28 @@ export default function ProfileScreen() {
       getProfile();
     }, []),
   );
+
+  // --- LANGUAGE TOGGLE HANDLER ---
+  const toggleLanguage = async (newLang: string) => {
+    if (newLang === language) return;
+
+    // 1. Update State
+    setLanguage(newLang);
+
+    // 2. Persist to Local Storage
+    await AsyncStorage.setItem("onboarding_lang", newLang);
+
+    // 3. Persist to DB
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (session) {
+      await supabase
+        .from("profiles")
+        .update({ language: newLang })
+        .eq("id", session.user.id);
+    }
+  };
 
   const handleImageUpload = async () => {
     try {
@@ -294,6 +322,7 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {/* HERO */}
         <View style={styles.heroSection}>
           <View style={styles.avatarWrapper}>
             <TouchableOpacity
@@ -324,16 +353,15 @@ export default function ProfileScreen() {
           <Text style={styles.userTitle}>
             PRO {(profile.selected_crop || "FARMER").toUpperCase()}
           </Text>
-          {/* XP Bar Removed for Day 1 */}
         </View>
 
+        {/* STATS GRID */}
         <View style={styles.gridContainer}>
           <StatCard
             label={t("wealth")}
             value={String(profile.coins || 0)}
             icon={<Coin width={20} height={20} />}
           />
-          {/* Multiplier and Quest Coins Removed for Day 1 */}
           <StatCard
             label={t("land_size")}
             value={profile.land_size || "N/A"}
@@ -341,6 +369,7 @@ export default function ProfileScreen() {
           />
         </View>
 
+        {/* SUSTAINABILITY */}
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>{t("sustainability_score")}</Text>
           <View style={styles.gaugeCard}>
@@ -351,6 +380,48 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        {/* NEW LANGUAGE TOGGLE */}
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>LANGUAGE / भाषा</Text>
+          <View style={styles.langToggleContainer}>
+            <TouchableOpacity
+              style={[
+                styles.langOption,
+                language === "en" && styles.langOptionActive,
+              ]}
+              onPress={() => toggleLanguage("en")}
+              activeOpacity={0.8}
+            >
+              <Text
+                style={[
+                  styles.langText,
+                  language === "en" && styles.langTextActive,
+                ]}
+              >
+                English
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.langOption,
+                language === "hi" && styles.langOptionActive,
+              ]}
+              onPress={() => toggleLanguage("hi")}
+              activeOpacity={0.8}
+            >
+              <Text
+                style={[
+                  styles.langText,
+                  language === "hi" && styles.langTextActive,
+                ]}
+              >
+                हिन्दी (Hindi)
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* ACHIEVEMENTS */}
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>{t("recent_achievements")}</Text>
           <ScrollView
@@ -540,4 +611,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: PIXEL_FONT,
   },
+
+  // New Language Toggle Styles
+  langToggleContainer: {
+    flexDirection: "row",
+    backgroundColor: "#333",
+    borderRadius: 25,
+    padding: 4,
+    marginTop: 5,
+  },
+  langOption: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: "center",
+    borderRadius: 22,
+  },
+  langOptionActive: { backgroundColor: "#4CAF50" },
+  langText: { color: "#aaa", fontWeight: "bold", fontSize: 14 },
+  langTextActive: { color: "white" },
 });
