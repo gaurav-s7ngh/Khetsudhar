@@ -182,7 +182,8 @@ export default function AppLayout() {
           }}
         />
 
-        {/* Govt Schemes Routes */}
+        {/* --- SCHEMES ROUTES --- */}
+        {/* If your folder is app/schemes, these names are correct. */}
         <Stack.Screen
           name="schemes/index"
           options={{

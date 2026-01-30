@@ -22,28 +22,28 @@ import Mascot from "../assets/images/Mascot.svg";
 import MascotFarmer from "../assets/images/MascotFarmer.svg";
 
 // --- DAY 1 HARDCODED CONTENT ---
-// We hardcode this to prevent Supabase from returning Lesson 4, 5, etc.
+// UPDATED: Points set to 1000, 1500, 2000 as requested
 const STATIC_LESSONS = [
   {
     id: 1,
     sequence: 1,
     title_en: "Soil Health Basics",
     description_en: "Understanding your land's foundation.",
-    points: 100,
+    points: 1000,
   },
   {
     id: 2,
     sequence: 2,
     title_en: "Organic Fertilizers",
     description_en: "Boost crops naturally and safely.",
-    points: 150,
+    points: 1500,
   },
   {
     id: 3,
     sequence: 3,
     title_en: "Women in Farming",
     description_en: "Empowering communities together.",
-    points: 200,
+    points: 2000,
   },
 ];
 
@@ -125,7 +125,7 @@ export default function LessonsScreen() {
     isOffline,
     refresh,
     refreshing,
-  } = useCachedQuery(`lessons_list_static_day1`, () =>
+  } = useCachedQuery(`lessons_list_static_day1_v2`, () =>
     fetchLessonsAndProgress(language || DEFAULT_LANGUAGE),
   );
 
